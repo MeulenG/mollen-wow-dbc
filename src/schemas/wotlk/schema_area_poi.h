@@ -57,6 +57,7 @@ static const DbcFieldDef area_poi_fields[] = {
     { "Description_Unk4",  DbcFieldType::String },
     { "DescriptionFlags",  DbcFieldType::UInt32 },
     { "WorldStateID",      DbcFieldType::UInt32 },
+    { "WorldMapLink",      DbcFieldType::UInt32 },
 };
 
 static const DbcSchema schema_area_poi = {

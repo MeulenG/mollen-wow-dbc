@@ -1,5 +1,6 @@
 add_library(mollen-dbc-schemas STATIC
     dbc_file.cpp
+    dbc_writer.cpp
     schema_registry.cpp
     dbc_generator.cpp
 )

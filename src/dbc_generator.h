@@ -8,6 +8,7 @@
 #include "dbc_schema.h"
 
 bool GenerateHeader(const DbcFile& dbc, const DbcSchema* schema,
-                    const std::filesystem::path& output_dir);
+                    const std::filesystem::path& output_dir,
+                    bool quiet = false);
 
 #endif // DBC_GENERATOR_H

@@ -66,6 +66,7 @@ static const DbcFieldDef world_state_ui_fields[] = {
     { "ExtendedUIStateVar2",   DbcFieldType::UInt32 },
     { "ExtendedUIStateVar3",   DbcFieldType::UInt32 },
     { "Type",                  DbcFieldType::UInt32 },
+    { "OrderIndex",            DbcFieldType::UInt32 },
 };
 
 static const DbcSchema schema_world_state_ui = {

@@ -16,8 +16,10 @@
 #include "schemas/wotlk/schema_battlemaster_list.h"
 #include "schemas/wotlk/schema_camera_shakes.h"
 #include "schemas/wotlk/schema_cfg_categories.h"
+#include "schemas/wotlk/schema_char_base_info.h"
 #include "schemas/wotlk/schema_cfg_configs.h"
 #include "schemas/wotlk/schema_char_hair_geosets.h"
+#include "schemas/wotlk/schema_char_start_outfit.h"
 #include "schemas/wotlk/schema_char_hair_textures.h"
 #include "schemas/wotlk/schema_char_sections.h"
 #include "schemas/wotlk/schema_char_titles.h"
@@ -147,6 +149,7 @@
 #include "schemas/wotlk/schema_particle_color.h"
 #include "schemas/wotlk/schema_pet_personality.h"
 #include "schemas/wotlk/schema_petition_type.h"
+#include "schemas/wotlk/schema_power_display.h"
 #include "schemas/wotlk/schema_pvp_difficulty.h"
 #include "schemas/wotlk/schema_quest_faction_reward.h"
 #include "schemas/wotlk/schema_quest_info.h"
@@ -178,6 +181,7 @@
 #include "schemas/wotlk/schema_spell.h"
 #include "schemas/wotlk/schema_spell_cast_times.h"
 #include "schemas/wotlk/schema_spell_category.h"
+#include "schemas/wotlk/schema_spell_chain_effects.h"
 #include "schemas/wotlk/schema_spell_description_variables.h"
 #include "schemas/wotlk/schema_spell_difficulty.h"
 #include "schemas/wotlk/schema_spell_dispel_type.h"
@@ -267,9 +271,11 @@ static const ExpansionSchemaEntry all_schemas[] = {
     { Expansion::WotLK, &schema_camera_shakes },
     { Expansion::WotLK, &schema_cfg_categories },
     { Expansion::WotLK, &schema_cfg_configs },
+    { Expansion::WotLK, &schema_char_base_info },
     { Expansion::WotLK, &schema_char_hair_geosets },
     { Expansion::WotLK, &schema_char_hair_textures },
     { Expansion::WotLK, &schema_char_sections },
+    { Expansion::WotLK, &schema_char_start_outfit },
     { Expansion::WotLK, &schema_char_titles },
     { Expansion::WotLK, &schema_char_variations },
     { Expansion::WotLK, &schema_character_facial_hair_styles },
@@ -397,6 +403,7 @@ static const ExpansionSchemaEntry all_schemas[] = {
     { Expansion::WotLK, &schema_particle_color },
     { Expansion::WotLK, &schema_pet_personality },
     { Expansion::WotLK, &schema_petition_type },
+    { Expansion::WotLK, &schema_power_display },
     { Expansion::WotLK, &schema_pvp_difficulty },
     { Expansion::WotLK, &schema_quest_faction_reward },
     { Expansion::WotLK, &schema_quest_info },
@@ -428,6 +435,7 @@ static const ExpansionSchemaEntry all_schemas[] = {
     { Expansion::WotLK, &schema_spell },
     { Expansion::WotLK, &schema_spell_cast_times },
     { Expansion::WotLK, &schema_spell_category },
+    { Expansion::WotLK, &schema_spell_chain_effects },
     { Expansion::WotLK, &schema_spell_description_variables },
     { Expansion::WotLK, &schema_spell_difficulty },
     { Expansion::WotLK, &schema_spell_dispel_type },

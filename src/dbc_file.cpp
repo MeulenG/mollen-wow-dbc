@@ -1,4 +1,5 @@
 #include "dbc_file.h"
+#include "dbc_schema.h"
 #include <cstring>
 
 DbcFile::DbcFile()
@@ -94,4 +95,70 @@ float DbcFile::GetFloat(uint32_t record, uint32_t field) const {
 const char* DbcFile::GetStringField(uint32_t record, uint32_t field) const {
     uint32_t offset = GetUInt32(record, field);
     return GetString(offset);
+}
+
+uint8_t DbcFile::GetUInt8At(uint32_t record, uint32_t byte_offset) const {
+    const uint8_t* row = GetRecord(record);
+    if (!row || byte_offset >= header_.record_size) {
+        return 0;
+    }
+    return row[byte_offset];
+}
+
+int8_t DbcFile::GetInt8At(uint32_t record, uint32_t byte_offset) const {
+    return static_cast<int8_t>(GetUInt8At(record, byte_offset));
+}
+
+uint16_t DbcFile::GetUInt16At(uint32_t record, uint32_t byte_offset) const {
+    const uint8_t* row = GetRecord(record);
+    if (!row || byte_offset + 1 >= header_.record_size) {
+        return 0;
+    }
+    uint16_t value;
+    memcpy(&value, row + byte_offset, sizeof(uint16_t));
+    return value;
+}
+
+int16_t DbcFile::GetInt16At(uint32_t record, uint32_t byte_offset) const {
+    return static_cast<int16_t>(GetUInt16At(record, byte_offset));
+}
+
+uint32_t DbcFile::GetUInt32At(uint32_t record, uint32_t byte_offset) const {
+    const uint8_t* row = GetRecord(record);
+    if (!row || byte_offset + 3 >= header_.record_size) {
+        return 0;
+    }
+    uint32_t value;
+    memcpy(&value, row + byte_offset, sizeof(uint32_t));
+    return value;
+}
+
+int32_t DbcFile::GetInt32At(uint32_t record, uint32_t byte_offset) const {
+    return static_cast<int32_t>(GetUInt32At(record, byte_offset));
+}
+
+float DbcFile::GetFloatAt(uint32_t record, uint32_t byte_offset) const {
+    const uint8_t* row = GetRecord(record);
+    if (!row || byte_offset + 3 >= header_.record_size) {
+        return 0.0f;
+    }
+    float value;
+    memcpy(&value, row + byte_offset, sizeof(float));
+    return value;
+}
+
+const char* DbcFile::GetStringAt(uint32_t record, uint32_t byte_offset) const {
+    uint32_t offset = GetUInt32At(record, byte_offset);
+    return GetString(offset);
+}
+
+uint32_t DbcFile::GetFieldOffset(const DbcSchema* schema, uint32_t field) {
+    if (!schema || field >= schema->field_count) {
+        return 0;
+    }
+    uint32_t offset = 0;
+    for (uint32_t i = 0; i < field; i++) {
+        offset += GetFieldTypeSize(schema->fields[i].type);
+    }
+    return offset;
 }
