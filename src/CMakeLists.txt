@@ -7,6 +7,7 @@ add_library(mollen-dbc-schemas STATIC
 
 target_include_directories(mollen-dbc-schemas PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/psql
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas/wotlk
 )
