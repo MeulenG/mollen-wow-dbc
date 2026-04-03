@@ -3,6 +3,9 @@ add_library(mollen-dbc-schemas STATIC
     dbc_writer.cpp
     schema_registry.cpp
     dbc_generator.cpp
+    psql/db_config.cpp
+    psql/psql_connector.cpp
+    psql/dbc_db_import.cpp
 )
 
 target_include_directories(mollen-dbc-schemas PUBLIC
@@ -11,6 +14,8 @@ target_include_directories(mollen-dbc-schemas PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas/wotlk
 )
+
+target_link_libraries(mollen-dbc-schemas PUBLIC tomlplusplus::tomlplusplus pqxx)
 
 add_executable(dbc-extract
     main.cpp
