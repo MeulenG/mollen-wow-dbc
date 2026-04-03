@@ -2,20 +2,25 @@
 #define PSQL_CONNECTOR_H
 
 #include <string>
-#include <vector>
+#include <memory>
 #include <pqxx/pqxx>
-#include <iostream>
+#include "db_config.h"
 
 class psql_connector
 {
 private:
-    const std::string invalidCataLogName = "3D000";
-    const std::string duplicateDatabaseName = "42P04";
-    const std::string numericValueOutOfRange = "22003";
+    std::unique_ptr<pqxx::connection> conn_;
 
 public:
-    void DatabaseConnect(const std::string& dbname, const std::string& user, const std::string& password, const std::string& host, int port);
-    int StartTransaction(pqxx::connection);
+    bool Connect(const std::string& dbname, const std::string& user,
+                 const std::string& password, const std::string& host, int port);
+    bool Connect(const DbConfig& config);
+    void Disconnect();
+    bool IsConnected() const;
+
+    pqxx::result Exec(const std::string& sql);
+
+    pqxx::connection& GetConnection();
 };
 
 #endif // PSQL_CONNECTOR_H
