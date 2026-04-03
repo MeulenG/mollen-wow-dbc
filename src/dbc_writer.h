@@ -20,12 +20,11 @@ public:
     // Import all records from an existing read-only DBC
     bool ImportFrom(const DbcFile& dbc, const DbcSchema* schema);
 
-    // Record manipulation
     uint32_t AddRecord();
     bool RemoveRecord(uint32_t index);
     uint32_t GetRecordCount() const;
 
-    // Field setters (by record index + field index)
+    // Field setters
     void SetUInt32(uint32_t record, uint32_t field, uint32_t value);
     void SetInt32(uint32_t record, uint32_t field, int32_t value);
     void SetFloat(uint32_t record, uint32_t field, float value);
