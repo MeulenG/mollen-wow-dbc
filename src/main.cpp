@@ -11,6 +11,9 @@
 #include "dbc_writer.h"
 #include "schema_registry.h"
 #include "dbc_generator.h"
+#include "db_config.h"
+#include "psql_connector.h"
+#include "dbc_db_import.h"
 
 namespace fs = std::filesystem;
 
@@ -21,6 +24,7 @@ static void PrintUsage(const char* program) {
     printf("  --locale     Locale subdirectory to include (default: enUS)\n");
     printf("  --generate   Generate C++ headers to output directory\n");
     printf("  --export     Export raw .dbc files to output directory\n");
+    printf("  --database   Import DBC data into PostgreSQL (path to .toml config)\n");
     printf("  -v           Verbose output (per-file details)\n");
     printf("  dbc_name     Optional: extract only this DBC (e.g. Spell)\n");
 }
@@ -230,6 +234,7 @@ struct DbcResult {
     bool packed;
     bool generated;
     bool exported;
+    bool imported;
     std::string warning;
 };
 
@@ -244,6 +249,7 @@ int main(int argc, char* argv[]) {
     const char* locale = "enUS";
     const char* generate_dir = nullptr;
     const char* export_dir = nullptr;
+    const char* db_config_path = nullptr;
     bool verbose = false;
     Expansion expansion = Expansion::WotLK;
 
@@ -276,6 +282,13 @@ int main(int argc, char* argv[]) {
                 printf("Error: --export requires an output directory\n");
                 return 1;
             }
+        } else if (strcmp(argv[i], "--database") == 0) {
+            if (i + 1 < argc) {
+                db_config_path = argv[++i];
+            } else {
+                printf("Error: --database requires a config file path\n");
+                return 1;
+            }
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             verbose = true;
         } else if (!data_dir) {
@@ -294,6 +307,15 @@ int main(int argc, char* argv[]) {
         printf("Not a directory: %s\n", data_dir);
         return 1;
     }
+
+    printf(R"(
+               .__  .__                                                             .______.
+  _____   ____ |  | |  |   ____   ____           __  _  ________  _  __           __| _/\_ |__   ____
+ /     \ /  _ \|  | |  | _/ __ \ /    \   ______ \ \/ \/ /  _ \ \/ \/ /  ______  / __ |  | __ \_/ ___\
+|  Y Y  (  <_> )  |_|  |_\  ___/|   |  \ /_____/  \     (  <_> )     /  /_____/ / /_/ |  | \_\ \  \___
+|__|_|  /\____/|____/____/\___  >___|  /           \/\_/ \____/ \/\_/           \____ |  |___  /\___  >
+      \/                      \/     \/                                              \/      \/     \/
+)");
 
     printf("Data directory: %s (expansion: %s, locale: %s)\n",
            data_dir, ExpansionName(expansion), locale);
@@ -345,6 +367,21 @@ int main(int argc, char* argv[]) {
 
     printf("Resolved %zu DBC files.\n", dbc_data.size());
 
+    // Connect to database if requested
+    psql_connector db;
+    if (db_config_path) {
+        DbConfig cfg;
+        if (!LoadDbConfig(db_config_path, cfg)) {
+            printf("Failed to load database config: %s\n", db_config_path);
+            return 1;
+        }
+        if (!db.Connect(cfg)) {
+            printf("Failed to connect to database.\n");
+            return 1;
+        }
+        printf("Connected to database: %s\n", cfg.dbname.c_str());
+    }
+
     bool single_target = (target_dbc != nullptr);
 
     if (single_target) {
@@ -385,6 +422,14 @@ int main(int argc, char* argv[]) {
                 }
             } else if (generate_dir) {
                 GenerateHeader(dbc, schema, generate_dir);
+            } else if (db.IsConnected()) {
+                if (schema) {
+                    if (DbCreateTable(db, schema) && DbImportDbc(db, dbc, schema, false)) {
+                        printf("  Imported %u records into database\n", dbc.GetRecordCount());
+                    }
+                } else {
+                    printf("  No schema available, skipping database import\n");
+                }
             } else {
                 DumpDbcDetailed(dbc, schema);
             }
@@ -414,6 +459,7 @@ int main(int argc, char* argv[]) {
         res.packed = (schema && schema->packed);
         res.generated = false;
         res.exported = false;
+        res.imported = false;
 
         // Check for schema mismatch
         if (schema) {
@@ -457,6 +503,10 @@ int main(int argc, char* argv[]) {
             }
         } else if (generate_dir && res.warning.empty()) {
             res.generated = GenerateHeader(dbc, schema, generate_dir, !verbose);
+        } else if (db.IsConnected() && schema && res.warning.empty()) {
+            if (DbCreateTable(db, schema)) {
+                res.imported = DbImportDbc(db, dbc, schema, !verbose);
+            }
         }
 
         results.push_back(res);
@@ -484,6 +534,14 @@ int main(int argc, char* argv[]) {
         if (export_dir) {
             printf("Output: %s\n", export_dir);
         }
+    } else if (db.IsConnected()) {
+        uint32_t imp_ok = 0, imp_skip = 0;
+        for (const auto& r : results) {
+            if (r.imported) imp_ok++;
+            else imp_skip++;
+        }
+        printf("Imported %u DBC tables, %u skipped\n", imp_ok, imp_skip);
+        db.Disconnect();
     } else {
         printf("  %-35s %8s %6s %8s  %s\n", "Name", "Records", "Fields", "RecSize", "Schema");
         printf("  %-35s %8s %6s %8s  %s\n",

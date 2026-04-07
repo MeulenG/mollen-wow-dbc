@@ -11,6 +11,20 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/MeulenG/mollen-storm.git
     GIT_TAG        master
 )
-FetchContent_MakeAvailable(mollen_storm)
+
+FetchContent_Declare(
+    tomlplusplus
+    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+    GIT_TAG        v3.4.0
+)
+
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.5.2
+)
+
+FetchContent_MakeAvailable(mollen_storm tomlplusplus Catch2)
 
 add_subdirectory(src)
+add_subdirectory(tests)
