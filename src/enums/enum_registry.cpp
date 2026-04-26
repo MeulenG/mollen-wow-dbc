@@ -16,6 +16,10 @@
 #include "enum_creature_type.h"
 #include "enum_blood_level.h"
 #include "enum_dispel_type.h"
+#include "enum_race_mask.h"
+#include "enum_class_mask.h"
+#include "enum_spell_school_mask.h"
+#include "enum_item_flags.h"
 
 namespace {
 
@@ -32,6 +36,10 @@ const DbcEnum* const k_all_enums[] = {
     &creature_type_enum,
     &blood_level_enum,
     &dispel_type_enum,
+    &race_mask_enum,
+    &class_mask_enum,
+    &spell_school_mask_enum,
+    &item_flags_enum,
 };
 
 constexpr uint32_t k_enum_count = sizeof(k_all_enums) / sizeof(k_all_enums[0]);
