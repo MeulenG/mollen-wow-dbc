@@ -5,7 +5,7 @@
 
 static const DbcFieldDef vehicle_seat_fields[] = {
     { "Id",                            DbcFieldType::UInt32 },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "VehicleSeatFlags" },
     { "AttachmentID", DbcFieldType::Int32, DbcSemantic::ForeignKey, "attachment" },
     { "AttachmentOffsetX",             DbcFieldType::Float  },
     { "AttachmentOffsetY",             DbcFieldType::Float  },
@@ -49,7 +49,7 @@ static const DbcFieldDef vehicle_seat_fields[] = {
     { "EnterUISoundID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "enteruisound" },
     { "ExitUISoundID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "exituisound" },
     { "UiSkin",                        DbcFieldType::UInt32 },
-    { "FlagsB",                        DbcFieldType::UInt32 },
+    { "FlagsB", DbcFieldType::UInt32, DbcSemantic::Bitmask, "VehicleSeatFlagsB" },
     { "CameraEnteringDelay",           DbcFieldType::Float  },
     { "CameraEnteringDuration",        DbcFieldType::Float  },
     { "CameraExitingDelay",            DbcFieldType::Float  },

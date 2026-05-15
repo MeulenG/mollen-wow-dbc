@@ -8,7 +8,7 @@ static const DbcFieldDef area_table_fields[] = {
     { "ContinentID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "continent" },
     { "ParentAreaID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "parentarea" },
     { "AreaBit",              DbcFieldType::UInt32 },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "AreaFlags" },
     { "SoundProviderPref",    DbcFieldType::UInt32 },
     { "SoundProviderPrefW",   DbcFieldType::UInt32 },
     { "AmbienceID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "ambience" },

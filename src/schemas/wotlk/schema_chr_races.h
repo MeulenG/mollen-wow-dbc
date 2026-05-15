@@ -5,7 +5,7 @@
 
 static const DbcFieldDef chr_races_fields[] = {
     { "Id",                     DbcFieldType::UInt32 },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "CharacterFlags" },
     { "FactionID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "faction" },
     { "ExplorationSoundID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "explorationsound" },
     { "MaleDisplayID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "creaturedisplayinfo" },

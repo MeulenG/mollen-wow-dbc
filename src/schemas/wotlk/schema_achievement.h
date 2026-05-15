@@ -45,7 +45,7 @@ static const DbcFieldDef achievement_fields[] = {
     { "Category",            DbcFieldType::UInt32 },
     { "Points",              DbcFieldType::UInt32 },
     { "SortOrder",           DbcFieldType::UInt32 },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "AchievementFlags" },
     { "IconID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "icon" },
     { "Reward_enUS", DbcFieldType::String, DbcSemantic::LocalizedString, "Reward" },
     { "Reward_koKR", DbcFieldType::String, DbcSemantic::LocalizedString, "Reward" },

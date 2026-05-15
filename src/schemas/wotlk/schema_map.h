@@ -7,7 +7,7 @@ static const DbcFieldDef map_fields[] = {
     { "Id",                         DbcFieldType::UInt32 },
     { "Directory",                  DbcFieldType::String },
     { "InstanceType",               DbcFieldType::UInt32 },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "MapFlags" },
     { "MapType",                    DbcFieldType::UInt32 },
     { "MapName_enUS", DbcFieldType::String, DbcSemantic::LocalizedString, "MapName" },
     { "MapName_koKR", DbcFieldType::String, DbcSemantic::LocalizedString, "MapName" },

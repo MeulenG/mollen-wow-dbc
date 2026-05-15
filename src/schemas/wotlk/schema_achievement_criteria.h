@@ -30,7 +30,7 @@ static const DbcFieldDef achievement_criteria_fields[] = {
     { "Description_Unk3", DbcFieldType::String, DbcSemantic::LocalizedString, "Description" },
     { "Description_Unk4", DbcFieldType::String, DbcSemantic::LocalizedString, "Description" },
     { "DescriptionFlags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
-    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask },
+    { "Flags", DbcFieldType::UInt32, DbcSemantic::Bitmask, "AchievementCriteriaFlags" },
     { "TimerStartEvent",    DbcFieldType::UInt32 },
     { "TimerAssetID", DbcFieldType::UInt32, DbcSemantic::ForeignKey, "timerasset" },
     { "TimerTime",          DbcFieldType::UInt32 },
