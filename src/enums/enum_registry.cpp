@@ -21,6 +21,35 @@
 #include "enum_spell_school_mask.h"
 #include "enum_item_flags.h"
 
+// Extracted from TrinityCore 3.3.5 by tools/extract_tc_enums.py.
+#include "enum_achievement_flags.h"
+#include "enum_achievement_criteria_flags.h"
+#include "enum_area_flags.h"
+#include "enum_map_flags.h"
+#include "enum_faction_template_flags.h"
+#include "enum_vehicle_seat_flags.h"
+#include "enum_vehicle_seat_flags_b.h"
+#include "enum_skill_race_class_info_flags.h"
+#include "enum_spell_attr0.h"
+#include "enum_spell_attr1.h"
+#include "enum_spell_attr2.h"
+#include "enum_spell_attr3.h"
+#include "enum_spell_attr4.h"
+#include "enum_spell_attr5.h"
+#include "enum_spell_attr6.h"
+#include "enum_spell_attr7.h"
+#include "enum_creature_type_flags.h"
+#include "enum_character_flags.h"
+#include "enum_unit_dyn_flags.h"
+#include "enum_dungeon_status_flag.h"
+#include "enum_race.h"
+#include "enum_class.h"
+#include "enum_language.h"
+#include "enum_spell_family.h"
+#include "enum_skill_category.h"
+#include "enum_totem_category.h"
+#include "enum_creature_elite_type.h"
+
 namespace {
 
 const DbcEnum* const k_all_enums[] = {
@@ -40,6 +69,34 @@ const DbcEnum* const k_all_enums[] = {
     &class_mask_enum,
     &spell_school_mask_enum,
     &item_flags_enum,
+    // From TrinityCore 3.3.5 extraction:
+    &achievement_flags_enum,
+    &achievement_criteria_flags_enum,
+    &area_flags_enum,
+    &map_flags_enum,
+    &faction_template_flags_enum,
+    &vehicle_seat_flags_enum,
+    &vehicle_seat_flags_b_enum,
+    &skill_race_class_info_flags_enum,
+    &spell_attr0_enum,
+    &spell_attr1_enum,
+    &spell_attr2_enum,
+    &spell_attr3_enum,
+    &spell_attr4_enum,
+    &spell_attr5_enum,
+    &spell_attr6_enum,
+    &spell_attr7_enum,
+    &creature_type_flags_enum,
+    &character_flags_enum,
+    &unit_dyn_flags_enum,
+    &dungeon_status_flag_enum,
+    &race_enum,
+    &class_enum,
+    &language_enum,
+    &spell_family_enum,
+    &skill_category_enum,
+    &totem_category_enum,
+    &creature_elite_type_enum,
 };
 
 constexpr uint32_t k_enum_count = sizeof(k_all_enums) / sizeof(k_all_enums[0]);
