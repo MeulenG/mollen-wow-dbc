@@ -97,6 +97,34 @@ FK_BY_SCHEMA = {
     },
 }
 
+# Per-schema bitmask hints. A field with this name in this schema gets the
+# specified enum table as its hint. Hints reference tables registered in
+# src/enums/enum_registry.cpp. Most come from TrinityCore 3.3.5 source.
+BITMASK_BY_SCHEMA = {
+    "schema_item":                      {"Flags": "ItemFlags"},
+    "schema_achievement":               {"Flags": "AchievementFlags"},
+    "schema_achievement_criteria":      {"Flags": "AchievementCriteriaFlags"},
+    "schema_area_table":                {"Flags": "AreaFlags"},
+    "schema_map":                       {"Flags": "MapFlags"},
+    "schema_faction_template":          {"Flags": "FactionTemplateFlags"},
+    "schema_vehicle_seat":              {"Flags": "VehicleSeatFlags",
+                                         "FlagsB": "VehicleSeatFlagsB"},
+    "schema_skill_race_class_info":     {"Flags": "SkillRaceClassInfoFlags"},
+    "schema_creature_family":           {"PetFoodMask": None},  # bitmask but no named enum
+    "schema_chr_races":                 {"Flags": "CharacterFlags"},
+    "schema_dungeon_encounter":         {"Flags": "DungeonStatusFlag"},
+    "schema_spell": {
+        "Attributes":    "SpellAttr0",
+        "AttributesEx":  "SpellAttr1",
+        "AttributesEx2": "SpellAttr2",
+        "AttributesEx3": "SpellAttr3",
+        "AttributesEx4": "SpellAttr4",
+        "AttributesEx5": "SpellAttr5",
+        "AttributesEx6": "SpellAttr6",
+        "AttributesEx7": "SpellAttr7",
+    },
+}
+
 # Per-schema enum overrides. Used when an exact field name means different
 # things in different DBCs. Most notable: `ClassID` is the character class FK
 # in PvP/Talent/etc., but means ItemClass enum in Item.dbc and ItemSubClass.
@@ -134,9 +162,19 @@ BITMASK_HINTS = {
 }
 
 
+# Matches all three forms a field-array entry can be in:
+#   { "Name", DbcFieldType::T }
+#   { "Name", DbcFieldType::T, DbcSemantic::S }
+#   { "Name", DbcFieldType::T, DbcSemantic::S, "hint" }
+# Captures the existing semantic and hint (if any) so the tagger can upgrade
+# (semantic only -> semantic+hint) without clobbering hand-tuned annotations.
 FIELD_RE = re.compile(
     r'^(?P<indent>\s*)\{\s*"(?P<name>[^"]+)"\s*,\s*'
-    r'DbcFieldType::(?P<type>\w+)\s*\}(?P<trailing>\s*,?\s*)$',
+    r'DbcFieldType::(?P<type>\w+)'
+    r'(?:\s*,\s*DbcSemantic::(?P<sem>\w+)'
+    r'(?:\s*,\s*"(?P<hint>[^"]*)")?'
+    r')?'
+    r'\s*\}(?P<trailing>\s*,?\s*)$',
     re.MULTILINE,
 )
 
@@ -175,7 +213,10 @@ def infer(name: str, ftype: str, schema_id: str) -> Optional[tuple[str, Optional
             and not name.endswith("ID") and not name.endswith("Index")):
         return ("Color", None)
 
-    # Bitmask: known hint or generic
+    # Bitmask: per-schema override > generic name match > shape-only fallback.
+    per_schema_bm = BITMASK_BY_SCHEMA.get(schema_id, {})
+    if name in per_schema_bm:
+        return ("Bitmask", per_schema_bm[name])
     if name in BITMASK_HINTS:
         return ("Bitmask", BITMASK_HINTS[name])
     if name == "Flags" or name.endswith("Flags") or name.endswith("Mask"):
@@ -219,22 +260,39 @@ def annotate(text: str, schema_id: str) -> tuple[str, list[str]]:
     log: list[str] = []
 
     def replace(m: re.Match) -> str:
-        indent  = m.group("indent")
-        name    = m.group("name")
-        ftype   = m.group("type")
+        indent   = m.group("indent")
+        name     = m.group("name")
+        ftype    = m.group("type")
+        existing_sem  = m.group("sem")
+        existing_hint = m.group("hint")
         trailing = m.group("trailing")
+
+        # Fields with both a semantic AND a hint are considered hand-tuned
+        # (or already complete) and left untouched. This protects manual
+        # overrides from being clobbered on re-runs.
+        if existing_sem and existing_hint:
+            return m.group(0)
 
         result = infer(name, ftype, schema_id)
         if result is None:
-            return m.group(0)
+            return m.group(0)  # heuristic has no opinion
 
         semantic, hint = result
+
+        # If the heuristic only produces the semantic we already have and
+        # no new hint, skip — nothing would change.
+        if existing_sem == semantic and not hint:
+            return m.group(0)
+
         if hint is not None:
             new_line = (f'{indent}{{ "{name}", DbcFieldType::{ftype}, '
                         f'DbcSemantic::{semantic}, "{hint}" }}{trailing}')
         else:
             new_line = (f'{indent}{{ "{name}", DbcFieldType::{ftype}, '
                         f'DbcSemantic::{semantic} }}{trailing}')
+
+        if new_line == m.group(0):
+            return m.group(0)
 
         log.append(f"  {name:<30} -> {semantic}" +
                    (f' "{hint}"' if hint else ""))
