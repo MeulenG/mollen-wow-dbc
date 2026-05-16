@@ -56,6 +56,8 @@ TARGETS: list[tuple[str, str, str]] = [
     ("src/server/shared/SharedDefines.h",             "DungeonStatusFlag",         "DungeonStatusFlag"),
 
     # ---- Plain enums (not bitmasks). ----
+    ("src/server/shared/SharedDefines.h",             "SpellEffects",              "SpellEffects"),
+    ("src/server/game/Spells/Auras/SpellAuraDefines.h", "AuraType",                "SpellAuraType"),
     ("src/server/shared/SharedDefines.h",             "Races",                     "Race"),
     ("src/server/shared/SharedDefines.h",             "Classes",                   "Class"),
     ("src/server/shared/SharedDefines.h",             "Language",                  "Language"),

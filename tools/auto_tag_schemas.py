@@ -195,6 +195,20 @@ BITMASK_BY_SCHEMA = {
     },
 }
 
+# Per-schema enum hints. Like ENUM_BY_SCHEMA but applied to fields that
+# weren't picked up by the generic bitmask/enum heuristics. Used for
+# per-effect-slot Effect type + Aura name fields.
+EFFECT_ENUMS_BY_SCHEMA = {
+    "schema_spell": {
+        "Effect1":              "SpellEffects",
+        "Effect2":              "SpellEffects",
+        "Effect3":              "SpellEffects",
+        "EffectApplyAuraName1": "SpellAuraType",
+        "EffectApplyAuraName2": "SpellAuraType",
+        "EffectApplyAuraName3": "SpellAuraType",
+    },
+}
+
 # Per-schema enum overrides. Used when an exact field name means different
 # things in different DBCs. Most notable: `ClassID` is the character class FK
 # in PvP/Talent/etc., but means ItemClass enum in Item.dbc and ItemSubClass.
@@ -297,6 +311,11 @@ def infer(name: str, ftype: str, schema_id: str) -> Optional[tuple[str, Optional
         return ("Bitmask", BITMASK_HINTS[name])
     if name == "Flags" or name.endswith("Flags") or name.endswith("Mask"):
         return ("Bitmask", None)
+
+    # Per-schema effect-enum hints (Effect type, AuraName)
+    eff_enum = EFFECT_ENUMS_BY_SCHEMA.get(schema_id, {})
+    if name in eff_enum:
+        return ("Enum", eff_enum[name])
 
     # Per-schema enum override (e.g. Item.ClassID -> ItemClass)
     per_schema_enum = ENUM_BY_SCHEMA.get(schema_id, {})
