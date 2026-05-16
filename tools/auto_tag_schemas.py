@@ -10,7 +10,7 @@ annotation and (where confident) an enum/FK hint:
     -- becomes -->
     { "Sex",       DbcFieldType::UInt32, DbcSemantic::Enum, "Sex" },
 
-The script is **idempotent** — fields that already carry an annotation are
+The script is **idempotent** - fields that already carry an annotation are
 detected by argument count and left untouched. So you can re-run after
 hand-editing without clobbering manual fixes.
 
@@ -18,7 +18,7 @@ Usage:
     python tools/auto_tag_schemas.py [--dry-run] [--diff] [--dir <path>]
 
 Heuristics are intentionally conservative. When in doubt the script leaves
-a field as Default — it's better to under-annotate and review-then-fix than
+a field as Default - it's better to under-annotate and review-then-fix than
 to mis-tag and have wrong widgets in the editor.
 """
 
@@ -66,7 +66,7 @@ FK_TARGET_OVERRIDES = {
     "ClassID":         "chrclasses",
     "FactionID":       "faction",
     "FactionGroupID":  "factiongroup",
-    "DisplayInfoID":   "creaturedisplayinfo",  # default — Item.dbc overrides below
+    "DisplayInfoID":   "creaturedisplayinfo",  # default - Item.dbc overrides below
     "DisplayID":       "creaturedisplayinfo",
     "MaleDisplayID":   "creaturedisplayinfo",
     "FemaleDisplayID": "creaturedisplayinfo",
@@ -155,7 +155,7 @@ CATEGORY_RULES: dict[str, list[tuple[_re_for_categories.Pattern, str, bool]]] = 
     ],
 }
 
-# Fallback rules applied to every other schema. Conservative — only assigns
+# Fallback rules applied to every other schema. Conservative - only assigns
 # obvious categories so we don't mis-label unfamiliar DBCs.
 DEFAULT_CATEGORY_RULES: list[tuple[_re_for_categories.Pattern, str, bool]] = [
     # Identity-ish
@@ -296,7 +296,7 @@ def infer(name: str, ftype: str, schema_id: str) -> Optional[tuple[str, Optional
         # hint = base name so the editor can group all 16 locales together.
         return ("LocalizedString", locale[0])
 
-    # Color by substring — but NOT for fields ending in "ID" (those are FK
+    # Color by substring - but NOT for fields ending in "ID" (those are FK
     # references TO a color, not a packed color value), and not for "Index"
     # variants which are also referencing rows elsewhere.
     if (ftype == "UInt32" and any(h in name for h in COLOR_HINTS)
@@ -343,7 +343,7 @@ def infer(name: str, ftype: str, schema_id: str) -> Optional[tuple[str, Optional
             return ("ForeignKey", guess)
         return None
 
-    # The literal "Id" primary key — leave Default.
+    # The literal "Id" primary key - leave Default.
     if name == "Id":
         return None
 
@@ -356,7 +356,7 @@ def categorize(name: str, schema_id: str) -> tuple[Optional[str], bool]:
     for pat, category, hidden in schema_rules:
         if pat.match(name):
             return (category, hidden)
-    # Fallback rules — only apply when no per-schema rule fired.
+    # Fallback rules - only apply when no per-schema rule fired.
     for pat, category, hidden in DEFAULT_CATEGORY_RULES:
         if pat.match(name):
             return (category, hidden)
@@ -383,7 +383,7 @@ def emit_field(indent: str, name: str, ftype: str,
     if need_cat:
         parts.append(f'"{category}"' if category else "nullptr")
     if need_hidden:
-        parts.append("true")  # we never emit "false" — bool defaults to false
+        parts.append("true")  # we never emit "false" - bool defaults to false
 
     return f'{indent}{{ {", ".join(parts)} }}{trailing}'
 
@@ -417,7 +417,7 @@ def annotate(text: str, schema_id: str) -> tuple[str, list[str]]:
                 semantic, hint = inferred
 
         # ---- Category / hidden inference ----
-        # Existing values win — categorize() only fills blanks.
+        # Existing values win - categorize() only fills blanks.
         if existing_cat:
             category = existing_cat
             hidden = existing_hid

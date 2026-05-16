@@ -14,7 +14,6 @@ static const DbcEnumValue achievement_flags_values[] = {
     { 0x00000004, "Store Max Value"   },
     { 0x00000008, "Summ"              },
     { 0x00000010, "Max Used"          },
-    { 0x00000020, "Req Count"         },
     { 0x00000040, "Average"           },
     { 0x00000080, "Bar"               },
     { 0x00000100, "Realm First Reach" },

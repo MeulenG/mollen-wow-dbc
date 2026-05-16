@@ -3,12 +3,12 @@
 Extract TrinityCore enum definitions into mollen-wow-dbc DbcEnum tables.
 
 Pulls authoritative bit values and names from the TrinityCore 3.3.5 branch
-(read via `git show` — no working-tree change required). Each TC enum becomes
+(read via `git show` - no working-tree change required). Each TC enum becomes
 one `enum_<snake>.h` file in our format with `Title Case` labels derived from
 the SCREAMING_SNAKE source names.
 
 This is a one-time codegen helper. The generated headers get hand-reviewed
-and committed as the source of truth — re-running only matters if you want
+and committed as the source of truth - re-running only matters if you want
 to pick up newly-added bits when TC updates.
 
 Usage:
@@ -102,6 +102,19 @@ def tc_show(tc_path: Path, branch: str, file_path: str) -> str:
     return res.stdout
 
 
+# Names matching these patterns are treated as enum-list sentinels and skipped
+# before common-prefix detection. TrinityCore terminates many enums with
+# `TOTAL_FOO = N` or `MAX_FOO = N`; if we include those in the prefix scan
+# they collapse the shared prefix to empty and the resulting labels keep
+# their full `SPELL_EFFECT_` / `SPELL_AURA_` prefix. Skipping them gives us
+# clean labels.
+SENTINEL_RE = re.compile(r"^(TOTAL_|MAX_|LAST_)|_COUNT$|_END$")
+
+
+def is_sentinel(name: str) -> bool:
+    return bool(SENTINEL_RE.search(name))
+
+
 def extract_enum_entries(source: str, enum_name: str
                          ) -> list[tuple[str, int, str | None]]:
     """
@@ -141,6 +154,8 @@ def extract_enum_entries(source: str, enum_name: str
                     # Strip TC's "@AttrX" disambiguator on Unknown entries.
                     title = TITLE_SUFFIX_RE.sub("", raw_title)
 
+            if is_sentinel(name):
+                continue  # skip TOTAL_*, MAX_*, etc. so common-prefix works
             entries.append((name, value, title))
         return entries
     return []
@@ -190,7 +205,7 @@ def emit_header(table_name: str,
         if val in seen_values:
             continue  # skip duplicate-value aliases
         seen_values.add(val)
-        # Prefer TC's `// TITLE` annotation when present — it's purpose-built
+        # Prefer TC's `// TITLE` annotation when present - it's purpose-built
         # for UI display. Fall back to humanizing the identifier.
         if title:
             label = title
