@@ -100,6 +100,76 @@ FK_BY_SCHEMA = {
 # Per-schema bitmask hints. A field with this name in this schema gets the
 # specified enum table as its hint. Hints reference tables registered in
 # src/enums/enum_registry.cpp. Most come from TrinityCore 3.3.5 source.
+# Per-schema (regex-on-field-name, category, default_hidden) rules. The first
+# matching rule for a field wins. Aimed primarily at Spell.dbc where 234
+# columns benefit hugely from sectioning; other DBCs fall through to
+# DEFAULT_CATEGORY_RULES below.
+import re as _re_for_categories  # local alias to keep grouping clear
+
+CATEGORY_RULES: dict[str, list[tuple[_re_for_categories.Pattern, str, bool]]] = {
+    "schema_spell": [
+        # --- Identity / display
+        (_re_for_categories.compile(r"^(SpellName|Rank|Description|ToolTip)"), "Identity", False),
+        (_re_for_categories.compile(r"^(spellicon|activeicon|ActiveIconID)$"), "Identity", False),
+        (_re_for_categories.compile(r"^(SpellNameFlag|RankFlags|DescriptionFlags|ToolTipFlags)$"), "Identity", True),
+
+        # --- Cost & cooldown
+        (_re_for_categories.compile(r"^Mana"), "Cast", False),
+        (_re_for_categories.compile(r"^(PowerType|PowerDisplayId|RuneCostID)$"), "Cast", False),
+        (_re_for_categories.compile(r"^(CastingTimeIndex|RangeIndex|DurationIndex)$"), "Cast", False),
+        (_re_for_categories.compile(r"^(Recovery|CategoryRecovery|StartRecovery)"), "Cast", False),
+
+        # --- Targeting
+        (_re_for_categories.compile(r"^(Targets|TargetCreatureType|MaxAffectedTargets|MaxTargetLevel|FacingCasterFlags|RequiresSpellFocus)$"), "Targeting", False),
+
+        # --- Attributes bitmasks
+        (_re_for_categories.compile(r"^Attributes(Ex\d*)?$"), "Attributes", False),
+
+        # --- Conditions (preconditions, equipment, restrictions)
+        (_re_for_categories.compile(r"^Stances"), "Conditions", False),
+        (_re_for_categories.compile(r"^(Caster|Target|Exclude(Caster|Target))Aura(Spell|State|StateNot)$"), "Conditions", True),
+        (_re_for_categories.compile(r"^EquippedItem"), "Conditions", True),
+        (_re_for_categories.compile(r"^(MinFactionId|MinReputation|RequiredAuraVision|AreaGroupId)$"), "Conditions", True),
+
+        # --- Effects: slot 1 visible by default, 2 and 3 hidden
+        (_re_for_categories.compile(r"^(Effect[A-Za-z]*|DmgMultiplier)1$"), "Effects", False),
+        (_re_for_categories.compile(r"^(Effect[A-Za-z]*|DmgMultiplier)[23]$"), "Effects", True),
+
+        # --- Proc & interrupt
+        (_re_for_categories.compile(r"^Proc"), "Proc", False),
+        (_re_for_categories.compile(r"^(InterruptFlags|AuraInterruptFlags|ChannelInterruptFlags|PreventionType|StackAmount)$"), "Proc", False),
+
+        # --- Reagents (incl totems as a sub-group)
+        (_re_for_categories.compile(r"^Reagent"), "Reagents", False),
+        (_re_for_categories.compile(r"^Totem"), "Reagents", False),
+
+        # --- Visuals
+        (_re_for_categories.compile(r"^SpellVisual"), "Visuals", False),
+        (_re_for_categories.compile(r"^(SpellMissileID|spellmissile)$"), "Visuals", False),
+
+        # --- Classification
+        (_re_for_categories.compile(r"^(Dispel|Mechanic|SchoolMask|SpellFamilyName|SpellFamilyFlags\d*|DmgClass|Category)$"), "Classification", False),
+
+        # --- Advanced / niche
+        (_re_for_categories.compile(r"^(ModalNextSpell|SpellPriority|StanceBarOrder|SpellDescriptionVariableID|SpellDifficultyId|MaxLevel|BaseLevel|SpellLevel)$"), "Advanced", True),
+    ],
+}
+
+# Fallback rules applied to every other schema. Conservative — only assigns
+# obvious categories so we don't mis-label unfamiliar DBCs.
+DEFAULT_CATEGORY_RULES: list[tuple[_re_for_categories.Pattern, str, bool]] = [
+    # Identity-ish
+    (_re_for_categories.compile(r"^(Id|Name|DisplayName|Title|Rank|Description|ToolTip)"), "Identity", False),
+    (_re_for_categories.compile(r".*_(enUS|koKR|frFR|deDE|enCN|enTW|zhTW|esES|esMX|ruRU|jaJP|ptPT|itIT|Unk[1-4]|lang)$"), "Identity", False),
+
+    # Visuals / assets
+    (_re_for_categories.compile(r".*(Color|Colour|Icon|Sound|Music|Texture|Visual|Display)"), "Visuals", False),
+
+    # Classification
+    (_re_for_categories.compile(r"^Flags$"), "Classification", False),
+]
+
+
 BITMASK_BY_SCHEMA = {
     "schema_item":                      {"Flags": "ItemFlags"},
     "schema_achievement":               {"Flags": "AchievementFlags"},
@@ -162,17 +232,23 @@ BITMASK_HINTS = {
 }
 
 
-# Matches all three forms a field-array entry can be in:
+# Matches every form a field-array entry can be in:
 #   { "Name", DbcFieldType::T }
 #   { "Name", DbcFieldType::T, DbcSemantic::S }
 #   { "Name", DbcFieldType::T, DbcSemantic::S, "hint" }
-# Captures the existing semantic and hint (if any) so the tagger can upgrade
-# (semantic only -> semantic+hint) without clobbering hand-tuned annotations.
+#   { "Name", DbcFieldType::T, DbcSemantic::S, "hint", "category" }
+#   { "Name", DbcFieldType::T, DbcSemantic::S, "hint", "category", true }
+# Intermediate slots can be `nullptr` when a later slot is set without an
+# earlier one (e.g. category set on a Default-semantic field).
 FIELD_RE = re.compile(
     r'^(?P<indent>\s*)\{\s*"(?P<name>[^"]+)"\s*,\s*'
     r'DbcFieldType::(?P<type>\w+)'
     r'(?:\s*,\s*DbcSemantic::(?P<sem>\w+)'
-    r'(?:\s*,\s*"(?P<hint>[^"]*)")?'
+    r'(?:\s*,\s*(?:"(?P<hint>[^"]*)"|nullptr)'
+    r'(?:\s*,\s*(?:"(?P<category>[^"]*)"|nullptr)'
+    r'(?:\s*,\s*(?P<hidden>true|false))?'
+    r')?'
+    r')?'
     r')?'
     r'\s*\}(?P<trailing>\s*,?\s*)$',
     re.MULTILINE,
@@ -255,6 +331,44 @@ def infer(name: str, ftype: str, schema_id: str) -> Optional[tuple[str, Optional
     return None
 
 
+def categorize(name: str, schema_id: str) -> tuple[Optional[str], bool]:
+    """Pick (category, default_hidden) for a field. Empty (None, False) if no rule matches."""
+    schema_rules = CATEGORY_RULES.get(schema_id, [])
+    for pat, category, hidden in schema_rules:
+        if pat.match(name):
+            return (category, hidden)
+    # Fallback rules — only apply when no per-schema rule fired.
+    for pat, category, hidden in DEFAULT_CATEGORY_RULES:
+        if pat.match(name):
+            return (category, hidden)
+    return (None, False)
+
+
+def emit_field(indent: str, name: str, ftype: str,
+               semantic: Optional[str], hint: Optional[str],
+               category: Optional[str], hidden: bool,
+               trailing: str) -> str:
+    """Render a field-array entry using the shortest form that captures all set fields."""
+    parts = [f'"{name}"', f'DbcFieldType::{ftype}']
+
+    # Each later slot forces all earlier slots to be present (positional args).
+    need_sem = bool(semantic) or hint or category or hidden
+    need_hint = hint is not None or category or hidden
+    need_cat = category is not None or hidden
+    need_hidden = hidden
+
+    if need_sem:
+        parts.append(f'DbcSemantic::{semantic or "Default"}')
+    if need_hint:
+        parts.append(f'"{hint}"' if hint else "nullptr")
+    if need_cat:
+        parts.append(f'"{category}"' if category else "nullptr")
+    if need_hidden:
+        parts.append("true")  # we never emit "false" — bool defaults to false
+
+    return f'{indent}{{ {", ".join(parts)} }}{trailing}'
+
+
 def annotate(text: str, schema_id: str) -> tuple[str, list[str]]:
     """Apply infer() to every 2-element field line. Returns (new_text, log)."""
     log: list[str] = []
@@ -265,37 +379,51 @@ def annotate(text: str, schema_id: str) -> tuple[str, list[str]]:
         ftype    = m.group("type")
         existing_sem  = m.group("sem")
         existing_hint = m.group("hint")
+        existing_cat  = m.group("category")
+        existing_hid  = m.group("hidden") == "true"
         trailing = m.group("trailing")
 
-        # Fields with both a semantic AND a hint are considered hand-tuned
-        # (or already complete) and left untouched. This protects manual
-        # overrides from being clobbered on re-runs.
+        # ---- Semantic / hint inference ----
+        # Existing semantic+hint is treated as hand-tuned and preserved.
+        # If only semantic is set, the tagger may add a hint.
         if existing_sem and existing_hint:
-            return m.group(0)
-
-        result = infer(name, ftype, schema_id)
-        if result is None:
-            return m.group(0)  # heuristic has no opinion
-
-        semantic, hint = result
-
-        # If the heuristic only produces the semantic we already have and
-        # no new hint, skip — nothing would change.
-        if existing_sem == semantic and not hint:
-            return m.group(0)
-
-        if hint is not None:
-            new_line = (f'{indent}{{ "{name}", DbcFieldType::{ftype}, '
-                        f'DbcSemantic::{semantic}, "{hint}" }}{trailing}')
+            semantic = existing_sem
+            hint = existing_hint
         else:
-            new_line = (f'{indent}{{ "{name}", DbcFieldType::{ftype}, '
-                        f'DbcSemantic::{semantic} }}{trailing}')
+            inferred = infer(name, ftype, schema_id)
+            if inferred is None:
+                semantic = existing_sem  # may be None
+                hint = None
+            else:
+                semantic, hint = inferred
+
+        # ---- Category / hidden inference ----
+        # Existing values win — categorize() only fills blanks.
+        if existing_cat:
+            category = existing_cat
+            hidden = existing_hid
+        else:
+            inferred_cat, inferred_hid = categorize(name, schema_id)
+            category = inferred_cat
+            hidden = existing_hid or inferred_hid
+
+        new_line = emit_field(indent, name, ftype, semantic, hint,
+                              category, hidden, trailing)
 
         if new_line == m.group(0):
             return m.group(0)
 
-        log.append(f"  {name:<30} -> {semantic}" +
-                   (f' "{hint}"' if hint else ""))
+        changes = []
+        if semantic and semantic != existing_sem:
+            changes.append(f"sem={semantic}")
+        if hint and hint != existing_hint:
+            changes.append(f'hint="{hint}"')
+        if category and category != existing_cat:
+            changes.append(f'cat="{category}"')
+        if hidden and not existing_hid:
+            changes.append("hidden")
+        if changes:
+            log.append(f"  {name:<30} -> {', '.join(changes)}")
         return new_line
 
     new_text = FIELD_RE.sub(replace, text)
