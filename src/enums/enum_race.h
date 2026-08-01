@@ -9,17 +9,17 @@
 // Each entry is (bit value, display label). Labels are derived from
 // the SCREAMING_SNAKE source name with the common prefix stripped.
 static const DbcEnumValue race_values[] = {
-    {          0, "None"          },
-    {          1, "Human"         },
-    {          2, "Orc"           },
-    {          3, "Dwarf"         },
-    {          4, "Nightelf"      },
-    {          5, "Undead Player" },
-    {          6, "Tauren"        },
-    {          7, "Gnome"         },
-    {          8, "Troll"         },
-    {         10, "Bloodelf"      },
-    {         11, "Draenei"       },
+    {          0, "None"      },
+    {          1, "Human"     },
+    {          2, "Orc"       },
+    {          3, "Dwarf"     },
+    {          4, "Night Elf" },
+    {          5, "Undead"    },
+    {          6, "Tauren"    },
+    {          7, "Gnome"     },
+    {          8, "Troll"     },
+    {         10, "Blood Elf" },
+    {         11, "Draenei"   },
 };
 
 static const DbcEnum race_enum = {

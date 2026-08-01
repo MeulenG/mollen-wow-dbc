@@ -9,21 +9,21 @@
 // Each entry is (bit value, display label). Labels are derived from
 // the SCREAMING_SNAKE source name with the common prefix stripped.
 static const DbcEnumValue spell_family_values[] = {
-    {          0, "Generic"     },
-    {          1, "Unk1"        },
-    {          3, "Mage"        },
-    {          4, "Warrior"     },
-    {          5, "Warlock"     },
-    {          6, "Priest"      },
-    {          7, "Druid"       },
-    {          8, "Rogue"       },
-    {          9, "Hunter"      },
-    {         10, "Paladin"     },
-    {         11, "Shaman"      },
-    {         12, "Unk2"        },
-    {         13, "Potion"      },
-    {         15, "Deathknight" },
-    {         17, "Pet"         },
+    {          0, "Generic"                      },
+    {          1, "Unk1 (events, holidays, ...)" },
+    {          3, "Mage"                         },
+    {          4, "Warrior"                      },
+    {          5, "Warlock"                      },
+    {          6, "Priest"                       },
+    {          7, "Druid"                        },
+    {          8, "Rogue"                        },
+    {          9, "Hunter"                       },
+    {         10, "Paladin"                      },
+    {         11, "Shaman"                       },
+    {         12, "Unk2 (Silence resistance?)"   },
+    {         13, "Potion"                       },
+    {         15, "Death Knight"                 },
+    {         17, "Pet"                          },
 };
 
 static const DbcEnum spell_family_enum = {
