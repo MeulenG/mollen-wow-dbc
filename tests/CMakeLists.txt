@@ -1,6 +1,7 @@
 add_executable(dbc-tests
     main.cpp
     test_db_config.cpp
+    test_enum_registry.cpp
     test_psql_connector.cpp
 )
 
