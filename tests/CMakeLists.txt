@@ -1,9 +1,14 @@
-add_executable(dbc-tests
+set(MOLLEN_DBC_TEST_SOURCES
     main.cpp
     test_db_config.cpp
     test_enum_registry.cpp
-    test_psql_connector.cpp
 )
+
+if(MOLLEN_DBC_ENABLE_PSQL)
+    list(APPEND MOLLEN_DBC_TEST_SOURCES test_psql_connector.cpp)
+endif()
+
+add_executable(dbc-tests ${MOLLEN_DBC_TEST_SOURCES})
 
 target_link_libraries(dbc-tests PRIVATE
     mollen-dbc-schemas
