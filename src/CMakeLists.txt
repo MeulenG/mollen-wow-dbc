@@ -3,6 +3,8 @@ add_library(mollen-dbc-schemas STATIC
     dbc_writer.cpp
     schema_registry.cpp
     dbc_generator.cpp
+    dbc_naming.cpp
+    enums/enum_registry.cpp
     psql/db_config.cpp
     psql/psql_connector.cpp
     psql/dbc_db_import.cpp
@@ -11,6 +13,7 @@ add_library(mollen-dbc-schemas STATIC
 target_include_directories(mollen-dbc-schemas PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/psql
+    ${CMAKE_CURRENT_SOURCE_DIR}/enums
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas
     ${CMAKE_CURRENT_SOURCE_DIR}/schemas/wotlk
 )
