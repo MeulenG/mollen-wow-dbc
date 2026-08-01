@@ -26,5 +26,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(mollen_storm tomlplusplus Catch2)
 
+# Must be enabled at the top level or ctest run from the build root
+# finds no tests (enable_testing() in a subdirectory only registers
+# that subdirectory's own scope).
+include(CTest)
+
 add_subdirectory(src)
 add_subdirectory(tests)
