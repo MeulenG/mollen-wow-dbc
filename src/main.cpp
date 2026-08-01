@@ -12,8 +12,21 @@
 #include "schema_registry.h"
 #include "dbc_generator.h"
 #include "db_config.h"
+#ifdef MOLLEN_DBC_ENABLE_PSQL
 #include "psql_connector.h"
 #include "dbc_db_import.h"
+#else
+// psql-less builds: constant-false stand-ins so the import flow compiles
+// unchanged. --database is rejected at argument parsing, so none of these
+// branches ever execute.
+struct psql_connector {
+    bool Connect(const DbConfig&) { return false; }
+    bool IsConnected() const { return false; }
+    void Disconnect() {}
+};
+inline bool DbCreateTable(psql_connector&, const DbcSchema*) { return false; }
+inline bool DbImportDbc(psql_connector&, const DbcFile&, const DbcSchema*, bool) { return false; }
+#endif
 
 namespace fs = std::filesystem;
 
@@ -24,7 +37,9 @@ static void PrintUsage(const char* program) {
     printf("  --locale     Locale subdirectory to include (default: enUS)\n");
     printf("  --generate   Generate C++ headers to output directory\n");
     printf("  --export     Export raw .dbc files to output directory\n");
+#ifdef MOLLEN_DBC_ENABLE_PSQL
     printf("  --database   Import DBC data into PostgreSQL (path to .toml config)\n");
+#endif
     printf("  -v           Verbose output (per-file details)\n");
     printf("  dbc_name     Optional: extract only this DBC (e.g. Spell)\n");
 }
@@ -283,12 +298,18 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
         } else if (strcmp(argv[i], "--database") == 0) {
+#ifdef MOLLEN_DBC_ENABLE_PSQL
             if (i + 1 < argc) {
                 db_config_path = argv[++i];
             } else {
                 printf("Error: --database requires a config file path\n");
                 return 1;
             }
+#else
+            printf("Error: this build has no PostgreSQL support "
+                   "(rebuild with MOLLEN_DBC_ENABLE_PSQL=ON)\n");
+            return 1;
+#endif
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             verbose = true;
         } else if (!data_dir) {
